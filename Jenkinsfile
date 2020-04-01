@@ -9,12 +9,12 @@ pipeline {
     }
     stage('Build') {
        steps {
-         sh 'npm install --suffix app/'
+         sh 'npm install'
        }
     }
     stage('Test') {
       steps {
-        sh 'npm test --suffix app/'
+        sh 'npm test'
       }
     }
   }
