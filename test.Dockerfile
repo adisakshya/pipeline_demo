@@ -10,7 +10,8 @@ COPY tests tests
 ENV NODE_ENV dev
 
 # Install app dependencies and test framework
-RUN npm install --only=dev
+RUN npm update && \
+    npm install cross-env jest supertest
 
 # Run tests, instead of the application
 CMD [ "npm", "test" ]
