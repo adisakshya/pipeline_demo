@@ -1,7 +1,7 @@
 # Dev Dockerfile
 
 # Production image as base
-FROM demo-app as BASE
+FROM adisakshya/express as BASE
 
 # Copy test files
 COPY tests tests
