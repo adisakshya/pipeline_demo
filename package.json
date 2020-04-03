@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
-    "test": "cross-env NODE_ENV=dev jest --testTimeout=10000"
+    "test": "cross-env NODE_ENV=dev jest --ci --testTimeout=10000"
   },
   "repository": {
     "type": "git",
@@ -27,6 +27,17 @@
   "devDependencies": {
     "cross-env": "^7.0.2",
     "jest": "^25.2.4",
+    "jest-junit": "^10.0.0",
     "supertest": "^4.0.2"
+  },
+  "jest-junit": {
+    "suiteName": "jest tests",
+    "outputDirectory": "./build/reports",
+    "outputName": "junit.xml",
+    "uniqueOutputName": "false",
+    "classNameTemplate": "{classname}-{title}",
+    "titleTemplate": "{classname}-{title}",
+    "ancestorSeparator": " › ",
+    "usePathForSuiteName": "true"
   }
 }
