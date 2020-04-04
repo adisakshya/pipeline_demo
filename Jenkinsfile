@@ -10,16 +10,15 @@ pipeline {
         dockerfileProduction = 'prod.Dockerfile'        // Production dockerfile name
         dockerfileTest = 'test.Dockerfile'              // Test dockerfile name
         
-        registryProduction = 'adisakshya/express'       // Production registry name
-        registryTest = 'adisakshya/express-test'        // Test registry name
+        registryProduction = getProductionRegistry()    // Production registry name
+        registryTest = getTestRegistry()                // Test registry name
 
-        test_container = null                           // Variable to hold test image container
         production = null                               // Variable to hold production image
         test = null                                     // Variable to hold test image
     }
     
     /*
-     * Auto select agent
+     * Define agent
      */
     agent any
     
@@ -59,7 +58,7 @@ pipeline {
                     echo 'Successfully built production docker image'
                     
                     echo 'Building test docker image'
-                    test = docker.build(registryTest,  '-f ' + dockerfileTest + ' .')
+                    test = docker.build(registryTest,  '-f ' + dockerfileTest + ' --build-arg PRODUCTION_IMAGE_TAG=%BUILD_NUMBER% .')
                     echo 'Successfully built test docker image'
                 }
             }
@@ -74,17 +73,18 @@ pipeline {
             steps {
                 script {
                     echo 'Running test docker image'
-                    test_container = test.run('-d=false --rm')
-                    echo 'Successfully ran test docker image and removed test container'
+                    test.run('-d=false')
+                    echo 'Successfully ran test docker image'
+
+                    getTestReports()
 
                     echo 'Removing test image'
                     if (isUnix()) {
-                        sh 'docker rmi ${registryTest}'
+                        sh 'docker container prune -f && docker rmi ' + registryTest
                     } else {
-                        bat 'docker rmi %registryTest%'
+                        bat 'docker container prune -f && docker rmi ' + registryTest
                     }
                     test = null
-                    test_container = null
                 }
             }
         }
@@ -111,4 +111,48 @@ pipeline {
             echo 'Success'
         }
     }
+}
+
+def getProductionRegistry() {
+    if (isUnix()) {
+        return 'adisakshya/express:$BUILD_NUMBER'
+    } else {
+        return 'adisakshya/express:%BUILD_NUMBER%'
+    }
+}
+
+def getTestRegistry() {
+    if (isUnix()) {
+        return 'adisakshya/express-test:$BUILD_NUMBER'
+    } else {
+        return 'adisakshya/express-test:%BUILD_NUMBER%'
+    }
+}
+
+def getTestReports() {
+    def testContainerID = getTestContainerID()
+    if (isUnix()) {
+        sh 'docker cp ' + testContainerID + ':/usr/src/app/build .'
+    } else {
+        bat 'docker cp ' + testContainerID + ':/usr/src/app/build .'
+    }
+    junit 'build/reports/*.xml'
+}
+
+def getTestContainerID() {
+    if (isUnix()) {
+        return getCommandOutput('docker ps -q --filter=ancestor=adisakshya/express-test:$BUILD_NUMBER -a')
+    } else {
+        return getCommandOutput('docker ps -q --filter=ancestor=adisakshya/express-test:%BUILD_NUMBER% -a')
+    }
+}
+
+def getCommandOutput(cmd) {
+    if (isUnix()){
+         return sh(returnStdout:true , script: '#!/bin/sh -e\n' + cmd).trim()
+     } else{
+       stdout = bat(returnStdout:true , script: cmd).trim()
+       result = stdout.readLines().drop(1).join(" ")       
+       return result
+    } 
 }
