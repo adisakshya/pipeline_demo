@@ -1,7 +1,8 @@
 # Dev Dockerfile
 
 # Production image as base
-FROM adisakshya/express as BASE
+ARG PRODUCTION_IMAGE_TAG=0
+FROM adisakshya/express:$PRODUCTION_IMAGE_TAG as BASE
 
 # Copy test files
 COPY tests tests
