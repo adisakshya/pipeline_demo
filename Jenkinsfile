@@ -7,14 +7,14 @@ pipeline {
      * Environment Variables
      */
     environment {
-        dockerfileProduction = 'prod.Dockerfile'        // Production dockerfile name
-        dockerfileTest = 'test.Dockerfile'              // Test dockerfile name
+        PRODUCTION_DOCKERFILE = 'prod.Dockerfile'           // Production dockerfile name
+        TEST_DOCKERFILE = 'test.Dockerfile'                 // Test dockerfile name
         
-        registryProduction = getProductionRegistry()    // Production registry name
-        registryTest = getTestRegistry()                // Test registry name
+        PRODUCTION_REGISTRY = getProductionRegistry()       // Production registry name
+        TEST_REGISTERY = getTestRegistry()                  // Test registry name
 
-        production = null                               // Variable to hold production image
-        test = null                                     // Variable to hold test image
+        PRODUCTION_IMAGE = null                             // Variable to hold production image
+        TEST_IMAGE = null                                   // Variable to hold test image
     }
     
     /*
@@ -37,7 +37,7 @@ pipeline {
         /*
          * Clone git repository
          */
-        stage('Cloning Git') {
+        stage('Cloning Repository') {
             agent any
             steps {
                 echo 'Cloning git repository'
@@ -54,11 +54,11 @@ pipeline {
             steps {
                 script {
                     echo 'Building production docker image'
-                    production = docker.build(registryProduction,  '-f ' + dockerfileProduction + ' .')
+                    PRODUCTION_IMAGE = docker.build(PRODUCTION_REGISTRY,  '-f ' + PRODUCTION_DOCKERFILE + ' .')
                     echo 'Successfully built production docker image'
                     
                     echo 'Building test docker image'
-                    test = docker.build(registryTest,  '-f ' + dockerfileTest + ' --build-arg PRODUCTION_IMAGE_TAG=%BUILD_NUMBER% .')
+                    TEST_IMAGE = docker.build(TEST_REGISTERY,  '-f ' + TEST_DOCKERFILE + ' --build-arg PRODUCTION_IMAGE_TAG=%BUILD_NUMBER% .')
                     echo 'Successfully built test docker image'
                 }
             }
@@ -73,7 +73,7 @@ pipeline {
             steps {
                 script {
                     echo 'Running test docker image'
-                    test.run('-d=false')
+                    TEST_IMAGE.run('-d=false')
                     echo 'Successfully ran test docker image'
                 }
             }
@@ -84,11 +84,11 @@ pipeline {
 
                         echo 'Removing test image'
                         if (isUnix()) {
-                            sh 'docker container prune -f && docker rmi ' + registryTest
+                            sh 'docker container prune -f && docker rmi ' + TEST_REGISTERY
                         } else {
-                            bat 'docker container prune -f && docker rmi ' + registryTest
+                            bat 'docker container prune -f && docker rmi ' + TEST_REGISTERY
                         }
-                        test = null
+                        TEST_IMAGE = null
                     }
                 }
             }
@@ -106,14 +106,17 @@ pipeline {
                 }
             }
         }
+        success {
+            echo 'Success'
+        }
+        unstable {
+            echo 'Unstable'
+        }
         failure {
             echo 'Failed'
         }
         changed {
             echo 'Changed'
-        }
-        success {
-            echo 'Success'
         }
     }
 }
