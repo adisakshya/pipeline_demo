@@ -75,16 +75,21 @@ pipeline {
                     echo 'Running test docker image'
                     test.run('-d=false')
                     echo 'Successfully ran test docker image'
+                }
+            }
+            post { 
+                always { 
+                    script {
+                        getTestReports()
 
-                    getTestReports()
-
-                    echo 'Removing test image'
-                    if (isUnix()) {
-                        sh 'docker container prune -f && docker rmi ' + registryTest
-                    } else {
-                        bat 'docker container prune -f && docker rmi ' + registryTest
+                        echo 'Removing test image'
+                        if (isUnix()) {
+                            sh 'docker container prune -f && docker rmi ' + registryTest
+                        } else {
+                            bat 'docker container prune -f && docker rmi ' + registryTest
+                        }
+                        test = null
                     }
-                    test = null
                 }
             }
         }
