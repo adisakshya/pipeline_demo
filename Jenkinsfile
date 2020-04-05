@@ -163,6 +163,38 @@ pipeline {
                 }
             }
         }
+
+        /*
+         * Deploy to development
+         */
+        stage('Deploy to development') {
+            when {
+                branch 'development'  
+            }
+            steps {
+                script {
+                    echo 'Ready for deploying to development'
+                    input message: 'Satisfied with test results? Deploy to development? (Click "Proceed" to continue)'
+                    bat 'docker tag ' + PRODUCTION_REGISTERY + ' ' + PRODUCTION_REGISTERY + '-dev'
+                    bat 'docker images'
+                    bat 'docker push ' + PRODUCTION_REGISTERY + '-dev'
+                }
+            }
+            post { 
+                always { 
+                    script {
+                        echo 'Removing production image'
+                        if (isUnix()) {
+                            sh 'docker container prune -f && docker rmi ' + PRODUCTION_REGISTERY
+                        } else {
+                            bat 'docker container prune -f && docker rmi ' + PRODUCTION_REGISTERY
+                        }
+                        PRODUCTION_IMAGE = null
+                    }
+                }
+            }
+        }
+        }
     }
     
     post {
