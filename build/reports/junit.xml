@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="jest tests" tests="1" failures="1" time="10.899">
+  <testsuite name="tests\ping.test.js" errors="0" failures="1" skipped="0" timestamp="2020-04-05T08:02:42" time="8.927" tests="1">
+    <testcase classname="GET-should ping the server" name="GET-should ping the server" time="0.062">
+      <failure>Error: expect(received).toEqual(expected) // deep equality
+
+Expected: 200
+Received: 400
+    at Object.it (C:\Users\adisa\adisakshya\projects\pipeline_demo\tests\ping.test.js:8:28)
+    at process._tickCallback (internal/process/next_tick.js:68:7)</failure>
+    </testcase>
+  </testsuite>
+</testsuites>

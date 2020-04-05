@@ -21,6 +21,11 @@ router.route('/pass')
    */
   .post(applicationController.passOperationOnPost)
 
+  /**
+   * DELETE Request Handler
+   */
+  .delete(applicationController.passOperationOnDelete)
+
 /**
  * Fail Route
  * These route mark unsuccessful operation returns STATUS CODE 400
@@ -35,5 +40,10 @@ router.route('/fail')
    * POST Request Handler
    */
   .post(applicationController.failOperationOnPost)
+
+  /**
+   * DELETE Request Handler
+   */
+  .delete(applicationController.failOperationOnDelete)
 
 module.exports = router;
