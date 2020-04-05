@@ -9,7 +9,7 @@
  */
 const passOperationOnGet = async (req, res) => {
     return res
-      .status(200)
+      .status(400)
       .json({
         "success": true,
         "error":false,
@@ -57,7 +57,7 @@ const failOperationOnGet = async (req, res) => {
 */
 const failOperationOnPost = async (req, res) => {
   return res
-      .status(400)
+      .status(200)
       .json({
           "success": false,
           "error":true,
