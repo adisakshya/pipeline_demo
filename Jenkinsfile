@@ -4,20 +4,6 @@
 pipeline {
     
     /*
-     * Environment Variables
-     */
-    environment {
-        PRODUCTION_DOCKERFILE = 'prod.Dockerfile'           // Production dockerfile name
-        TEST_DOCKERFILE = 'test.Dockerfile'                 // Test dockerfile name
-        
-        PRODUCTION_REGISTRY = getProductionRegistry()       // Production registry name
-        TEST_REGISTERY = getTestRegistry()                  // Test registry name
-
-        PRODUCTION_IMAGE = null                             // Variable to hold production image
-        TEST_IMAGE = null                                   // Variable to hold test image
-    }
-    
-    /*
      * Define agent
      */
     agent any
@@ -27,6 +13,21 @@ pipeline {
      */
     tools {
         'org.jenkinsci.plugins.docker.commons.tools.DockerTool' 'Docker'
+    }
+    
+    /*
+     * Environment Variables
+     */
+    environment {
+        VERSION = null                      // Version of service
+
+        PRODUCTION_DOCKERFILE = null        // Production dockerfile name
+        PRODUCTION_REGISTRY = null          // Production registry name
+        PRODUCTION_IMAGE = null             // Variable to hold production image
+        
+        TEST_DOCKERFILE = null              // Test dockerfile name
+        TEST_REGISTERY = null               // Test registry name
+        TEST_IMAGE = null                   // Variable to hold test image
     }
     
     /*
@@ -41,8 +42,77 @@ pipeline {
             agent any
             steps {
                 echo 'Cloning git repository'
-                git 'https://github.com/adisakshya/pipeline_demo'
-                echo 'Successfully cloned git repository'
+                script {
+                    git 'https://github.com/adisakshya/pipeline_demo'
+                }
+            }
+            post { 
+                success { 
+                    echo 'Successfully cloned git repository'
+                }
+                failure {
+                    echo 'Failed to clone git repository'
+                }
+            }
+        }
+        
+        /*
+         * Identify version of service
+         */
+        stage('Versioning') {
+            agent any
+            tools {
+                nodejs 'node'
+            }
+            steps {
+                echo 'Getting version information'
+                script {
+                    VERSION = getCommandOutput('node -p -e "require(\'./package.json\').version"')
+                }
+            }
+            post { 
+                always { 
+                    script {
+                        if (!VERSION) {
+                            currentBuild.result = 'FAILED'
+                            error('Failed to identify version information')
+                        } else {
+                            echo 'Identified VERSION: ' + VERSION
+                        }
+                    }
+                }
+            }
+        }
+
+        /*
+         * Set environment variables
+         */
+        stage('Environement Setup') {
+            agent any
+            steps {
+                echo 'Setting environment variables'
+                script {
+                    PRODUCTION_DOCKERFILE = 'prod.Dockerfile'
+                    PRODUCTION_REGISTRY = getProductionRegistry(VERSION)
+                    
+                    TEST_DOCKERFILE = 'test.Dockerfile'
+                    TEST_REGISTERY = getTestRegistry(VERSION)
+                }
+            }
+            post { 
+                always { 
+                    script {
+                        if (!PRODUCTION_DOCKERFILE || !PRODUCTION_REGISTRY || !TEST_DOCKERFILE || !TEST_REGISTERY) {
+                            currentBuild.result = 'FAILED'
+                            error('Failed to set environment variables')
+                        } else {
+                            echo 'PRODUCTION_DOCKERFILE: ' + PRODUCTION_DOCKERFILE
+                            echo 'PRODUCTION_REGISTRY: ' + PRODUCTION_REGISTRY
+                            echo 'TEST_DOCKERFILE: ' + TEST_DOCKERFILE
+                            echo 'TEST_REGISTERY: ' + TEST_REGISTERY
+                        }
+                    }
+                }
             }
         }
         
@@ -58,7 +128,7 @@ pipeline {
                     echo 'Successfully built production docker image'
                     
                     echo 'Building test docker image'
-                    TEST_IMAGE = docker.build(TEST_REGISTERY,  '-f ' + TEST_DOCKERFILE + ' --build-arg PRODUCTION_IMAGE_TAG=%BUILD_NUMBER% .')
+                    TEST_IMAGE = docker.build(TEST_REGISTERY,  '-f ' + TEST_DOCKERFILE + ' --build-arg PRODUCTION_IMAGE_TAG=' + VERSION + ' .')
                     echo 'Successfully built test docker image'
                 }
             }
@@ -80,7 +150,7 @@ pipeline {
             post { 
                 always { 
                     script {
-                        getTestReports()
+                        getTestReports(VERSION)
 
                         echo 'Removing test image'
                         if (isUnix()) {
@@ -121,24 +191,28 @@ pipeline {
     }
 }
 
-def getProductionRegistry() {
+def getVersion() {
+    return getCommandOutput('node -p -e "require(\'./package.json\').version"')
+}
+
+def getProductionRegistry(String VERSION) {
     if (isUnix()) {
-        return 'adisakshya/express:$BUILD_NUMBER'
+        return 'adisakshya/express:' + VERSION
     } else {
-        return 'adisakshya/express:%BUILD_NUMBER%'
+        return 'adisakshya/express:' + VERSION
     }
 }
 
-def getTestRegistry() {
+def getTestRegistry(String VERSION) {
     if (isUnix()) {
-        return 'adisakshya/express-test:$BUILD_NUMBER'
+        return 'adisakshya/express-test:' + VERSION
     } else {
-        return 'adisakshya/express-test:%BUILD_NUMBER%'
+        return 'adisakshya/express-test:' + VERSION
     }
 }
 
-def getTestReports() {
-    def testContainerID = getTestContainerID()
+def getTestReports(String VERSION) {
+    def testContainerID = getTestContainerID(VERSION)
     if (isUnix()) {
         sh 'docker cp ' + testContainerID + ':/usr/src/app/build .'
     } else {
@@ -147,11 +221,11 @@ def getTestReports() {
     junit 'build/reports/*.xml'
 }
 
-def getTestContainerID() {
+def getTestContainerID(String VERSION) {
     if (isUnix()) {
-        return getCommandOutput('docker ps -q --filter=ancestor=adisakshya/express-test:$BUILD_NUMBER -a')
+        return getCommandOutput('docker ps -q --filter=ancestor=adisakshya/express-test:' + VERSION + ' -a')
     } else {
-        return getCommandOutput('docker ps -q --filter=ancestor=adisakshya/express-test:%BUILD_NUMBER% -a')
+        return getCommandOutput('docker ps -q --filter=ancestor=adisakshya/express-test:' + VERSION + ' -a')
     }
 }
 
