@@ -223,7 +223,6 @@ pipeline {
             echo 'Removing all dangling images'
             script {
                 executeCommand('docker image prune -f')
-                deleteDir()
             }
         }
         success {
