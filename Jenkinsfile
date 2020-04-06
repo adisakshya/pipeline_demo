@@ -52,11 +52,7 @@ pipeline {
             post { 
                 always {
                     script {
-                        if(isUnix()) {
-                            sh 'ls'
-                        } else {
-                            bat 'dir'
-                        }
+                        executeCommand('dir')
                     }
                 }
                 success { 
@@ -162,11 +158,7 @@ pipeline {
                 always { 
                     script {
                         echo 'Removing test image'
-                        if (isUnix()) {
-                            sh 'docker container prune -f && docker rmi ' + TEST_REGISTRY
-                        } else {
-                            bat 'docker container prune -f && docker rmi ' + TEST_REGISTRY
-                        }
+                        executeCommand('docker container prune -f && docker rmi ' + TEST_REGISTRY)
                         TEST_IMAGE = null
                     }
                 }
@@ -190,14 +182,10 @@ pipeline {
             post { 
                 always { 
                     script {
-                        echo 'Removing production and development docker image'
-                        if (isUnix()) {
-                            sh 'docker container prune -f && docker rmi ' + PRODUCTION_REGISTRY + ' -f'
-                            sh 'docker container prune -f && docker rmi ' + PRODUCTION_REGISTRY + '-dev -f'
-                        } else {
-                            bat 'docker container prune -f && docker rmi ' + PRODUCTION_REGISTRY + ' -f'
-                            bat 'docker container prune -f && docker rmi ' + PRODUCTION_REGISTRY + '-dev -f'
-                        }
+                        echo 'Removing production docker image'
+                        executeCommand('docker container prune -f && docker rmi ' + PRODUCTION_REGISTRY + ' -f')
+                        echo 'Removing development docker image'
+                        executeCommand('docker container prune -f && docker rmi ' + PRODUCTION_REGISTRY + '-dev -f')
                         PRODUCTION_IMAGE = null
                     }
                 }
@@ -222,11 +210,7 @@ pipeline {
                 always { 
                     script {
                         echo 'Removing production image'
-                        if (isUnix()) {
-                            sh 'docker container prune -f && docker rmi ' + PRODUCTION_REGISTRY + ' -f'
-                        } else {
-                            bat 'docker container prune -f && docker rmi ' + PRODUCTION_REGISTRY + ' -f'
-                        }
+                        executeCommand('docker container prune -f && docker rmi ' + PRODUCTION_REGISTRY + ' -f')
                         PRODUCTION_IMAGE = null
                     }
                 }
@@ -238,11 +222,8 @@ pipeline {
         always {
             echo 'Removing all dangling images'
             script {
-                if (isUnix()) {
-                    sh 'docker image prune -f'
-                } else {
-                    bat 'docker image prune -f'
-                }
+                executeCommand('docker image prune -f')
+                deleteDir()
             }
         }
         success {
@@ -257,6 +238,17 @@ pipeline {
         changed {
             echo 'Changed'
         }
+    }
+}
+
+/*
+ * Execute command
+ */
+def executeCommand(String command) {
+    if (isUnix()) {
+        sh command
+    } else {
+        bat command
     }
 }
 
@@ -287,11 +279,7 @@ def getTestRegistry(String VERSION) {
  */
 def getTestReports(String VERSION) {
     def testContainerID = getTestContainerID(VERSION)
-    if (isUnix()) {
-        sh 'docker cp ' + testContainerID + ':/usr/src/app/build .'
-    } else {
-        bat 'docker cp ' + testContainerID + ':/usr/src/app/build .'
-    }
+    executeCommand('docker cp ' + testContainerID + ':/usr/src/app/build .')
     junit 'build/reports/*.xml'
 }
 
@@ -311,15 +299,9 @@ def getTestContainerID(String VERSION) {
  */
 def deployToDevelopment(String PRODUCTION_REGISTRY) {
     withCredentials([usernamePassword(credentialsId: 'dockerhub', passwordVariable: 'p', usernameVariable: 'u')]) {
-        if(isUnix()) {
-            sh 'docker login -u %u% -p %p% https://index.docker.io/v1/'
-            sh 'docker tag ' + PRODUCTION_REGISTRY + ' ' + PRODUCTION_REGISTRY + '-dev'
-            sh 'docker push ' + PRODUCTION_REGISTRY + '-dev'
-        } else {
-            bat 'docker login -u %u% -p %p% https://index.docker.io/v1/'
-            bat 'docker tag ' + PRODUCTION_REGISTRY + ' ' + PRODUCTION_REGISTRY + '-dev'
-            bat 'docker push ' + PRODUCTION_REGISTRY + '-dev'
-        }
+        executeCommand('docker login -u ' + u + ' -p ' + p + ' https://index.docker.io/v1/')
+        executeCommand('docker tag ' + PRODUCTION_REGISTRY + ' ' + PRODUCTION_REGISTRY + '-dev')
+        executeCommand('docker push ' + PRODUCTION_REGISTRY + '-dev')
     }
 }
 
@@ -328,20 +310,15 @@ def deployToDevelopment(String PRODUCTION_REGISTRY) {
  */
 def deployToProduction(String PRODUCTION_REGISTRY) {
     withCredentials([usernamePassword(credentialsId: 'dockerhub', passwordVariable: 'p', usernameVariable: 'u')]) {
-        if(isUnix()) {
-            sh 'docker login -u %u% -p %p% https://index.docker.io/v1/'
-            sh 'docker push ' + PRODUCTION_REGISTRY
-        } else {
-            bat 'docker login -u %u% -p %p% https://index.docker.io/v1/'
-            bat 'docker push ' + PRODUCTION_REGISTRY
-        }
+        executeCommand('docker login -u ' + u + ' -p ' + p + ' https://index.docker.io/v1/')
+        executeCommand('docker push ' + PRODUCTION_REGISTRY)
     }
 }
 
 /*
  * Get a command output
  */
-def getCommandOutput(COMMAND) {
+def getCommandOutput(String COMMAND) {
     if (isUnix()){
          return sh(returnStdout:true , script: '#!/bin/sh -e\n' + COMMAND).trim()
      } else{
