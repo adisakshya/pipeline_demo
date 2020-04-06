@@ -12,7 +12,7 @@ pipeline {
      * Use docker tool
      */
     tools {
-        'org.jenkinsci.plugins.docker.commons.tools.DockerTool' 'Docker'
+        'org.jenkinsci.plugins.docker.commons.tools.DockerTool' 'docker'
     }
     
     /*
@@ -47,6 +47,15 @@ pipeline {
                 }
             }
             post { 
+                always {
+                    script {
+                        if(isUnix()) {
+                            sh 'ls'
+                        } else {
+                            bat 'dir'
+                        }
+                    }
+                }
                 success { 
                     echo 'Successfully cloned git repository'
                 }
@@ -96,20 +105,20 @@ pipeline {
                     PRODUCTION_REGISTRY = getProductionRegistry(VERSION)
                     
                     TEST_DOCKERFILE = 'test.Dockerfile'
-                    TEST_REGISTERY = getTestRegistry(VERSION)
+                    TEST_REGISTRY = getTestRegistry(VERSION)
                 }
             }
             post { 
                 always { 
                     script {
-                        if (!PRODUCTION_DOCKERFILE || !PRODUCTION_REGISTRY || !TEST_DOCKERFILE || !TEST_REGISTERY) {
+                        if (!PRODUCTION_DOCKERFILE || !PRODUCTION_REGISTRY || !TEST_DOCKERFILE || !TEST_REGISTRY) {
                             currentBuild.result = 'FAILED'
                             error('Failed to set environment variables')
                         } else {
                             echo 'PRODUCTION_DOCKERFILE: ' + PRODUCTION_DOCKERFILE
                             echo 'PRODUCTION_REGISTRY: ' + PRODUCTION_REGISTRY
                             echo 'TEST_DOCKERFILE: ' + TEST_DOCKERFILE
-                            echo 'TEST_REGISTERY: ' + TEST_REGISTERY
+                            echo 'TEST_REGISTRY: ' + TEST_REGISTRY
                         }
                     }
                 }
@@ -128,7 +137,7 @@ pipeline {
                     echo 'Successfully built production docker image'
                     
                     echo 'Building test docker image'
-                    TEST_IMAGE = docker.build(TEST_REGISTERY,  '-f ' + TEST_DOCKERFILE + ' --build-arg PRODUCTION_IMAGE_TAG=' + VERSION + ' .')
+                    TEST_IMAGE = docker.build(TEST_REGISTRY,  '-f ' + TEST_DOCKERFILE + ' --build-arg PRODUCTION_IMAGE_TAG=' + VERSION + ' .')
                     echo 'Successfully built test docker image'
                 }
             }
@@ -154,9 +163,9 @@ pipeline {
 
                         echo 'Removing test image'
                         if (isUnix()) {
-                            sh 'docker container prune -f && docker rmi ' + TEST_REGISTERY
+                            sh 'docker container prune -f && docker rmi ' + TEST_REGISTRY
                         } else {
-                            bat 'docker container prune -f && docker rmi ' + TEST_REGISTERY
+                            bat 'docker container prune -f && docker rmi ' + TEST_REGISTRY
                         }
                         TEST_IMAGE = null
                     }
@@ -175,9 +184,7 @@ pipeline {
                 script {
                     echo 'Ready for deploying to development'
                     input message: 'Satisfied with test results? Deploy to development? (Click "Proceed" to continue)'
-                    bat 'docker tag ' + PRODUCTION_REGISTERY + ' ' + PRODUCTION_REGISTERY + '-dev'
-                    bat 'docker images'
-                    bat 'docker push ' + PRODUCTION_REGISTERY + '-dev'
+                    deployToDevelopment(PRODUCTION_REGISTRY)
                 }
             }
             post { 
@@ -185,15 +192,43 @@ pipeline {
                     script {
                         echo 'Removing production image'
                         if (isUnix()) {
-                            sh 'docker container prune -f && docker rmi ' + PRODUCTION_REGISTERY
+                            sh 'docker container prune -f && docker rmi ' + PRODUCTION_REGISTRY + ' -f'
                         } else {
-                            bat 'docker container prune -f && docker rmi ' + PRODUCTION_REGISTERY
+                            bat 'docker container prune -f && docker rmi ' + PRODUCTION_REGISTRY + ' -f'
                         }
                         PRODUCTION_IMAGE = null
                     }
                 }
             }
         }
+
+        /*
+         * Deploy to production
+         */
+        stage('Deploy to production') {
+            when {
+                branch 'production'  
+            }
+            steps {
+                script {
+                    echo 'Ready for deploying to production'
+                    input message: 'Satisfied with test results? Deploy to production? (Click "Proceed" to continue)'
+                    deployToProduction(PRODUCTION_REGISTRY)
+                }
+            }
+            post { 
+                always { 
+                    script {
+                        echo 'Removing production image'
+                        if (isUnix()) {
+                            sh 'docker container prune -f && docker rmi ' + PRODUCTION_REGISTRY + ' -f'
+                        } else {
+                            bat 'docker container prune -f && docker rmi ' + PRODUCTION_REGISTRY + ' -f'
+                        }
+                        PRODUCTION_IMAGE = null
+                    }
+                }
+            }
         }
     }
     
@@ -258,6 +293,34 @@ def getTestContainerID(String VERSION) {
         return getCommandOutput('docker ps -q --filter=ancestor=adisakshya/express-test:' + VERSION + ' -a')
     } else {
         return getCommandOutput('docker ps -q --filter=ancestor=adisakshya/express-test:' + VERSION + ' -a')
+    }
+}
+
+def deployToDevelopment(String PRODUCTION_REGISTRY) {
+    withCredentials([usernamePassword(credentialsId: 'dockerhub', passwordVariable: 'p', usernameVariable: 'u')]) {
+        if(isUnix()) {
+            sh 'docker login -u %u% -p %p% https://index.docker.io/v1/'
+            sh 'docker tag ' + PRODUCTION_REGISTRY + ' ' + PRODUCTION_REGISTRY + '-dev'
+            sh 'docker push ' + PRODUCTION_REGISTRY + '-dev'
+        } else {
+            bat 'docker login -u %u% -p %p% https://index.docker.io/v1/'
+            bat 'docker tag ' + PRODUCTION_REGISTRY + ' ' + PRODUCTION_REGISTRY + '-dev'
+            bat 'docker push ' + PRODUCTION_REGISTRY + '-dev'
+        }
+    }
+}
+
+def deployToProduction(String PRODUCTION_REGISTRY) {
+    withCredentials([usernamePassword(credentialsId: 'dockerhub', passwordVariable: 'p', usernameVariable: 'u')]) {
+        if(isUnix()) {
+            sh 'docker login -u %u% -p %p% https://index.docker.io/v1/'
+            sh 'docker tag ' + PRODUCTION_REGISTRY + ' ' + PRODUCTION_REGISTRY
+            sh 'docker push ' + PRODUCTION_REGISTRY
+        } else {
+            bat 'docker login -u %u% -p %p% https://index.docker.io/v1/'
+            bat 'docker tag ' + PRODUCTION_REGISTRY + ' ' + PRODUCTION_REGISTRY
+            bat 'docker push ' + PRODUCTION_REGISTRY
+        }
     }
 }
 
