@@ -40,6 +40,9 @@ pipeline {
          */
         stage('Cloning Repository') {
             agent any
+            tools {
+                git 'Default'
+            }
             steps {
                 echo 'Cloning git repository'
                 script {
@@ -145,8 +148,6 @@ pipeline {
         
         /*
          * Run test docker image, to execute tests
-         * and after completion remove the container
-         * running the test docker image
          */
         stage('Test') {
             steps {
@@ -259,10 +260,9 @@ pipeline {
     }
 }
 
-def getVersion() {
-    return getCommandOutput('node -p -e "require(\'./package.json\').version"')
-}
-
+/*
+ * Return production registry name
+ */
 def getProductionRegistry(String VERSION) {
     if (isUnix()) {
         return 'adisakshya/express:' + VERSION
@@ -271,6 +271,9 @@ def getProductionRegistry(String VERSION) {
     }
 }
 
+/*
+ * Return test registry name
+ */
 def getTestRegistry(String VERSION) {
     if (isUnix()) {
         return 'adisakshya/express-test:' + VERSION
@@ -279,6 +282,9 @@ def getTestRegistry(String VERSION) {
     }
 }
 
+/*
+ * Get JUnit test reports
+ */
 def getTestReports(String VERSION) {
     def testContainerID = getTestContainerID(VERSION)
     if (isUnix()) {
@@ -289,6 +295,9 @@ def getTestReports(String VERSION) {
     junit 'build/reports/*.xml'
 }
 
+/*
+ * Return test container ID
+ */
 def getTestContainerID(String VERSION) {
     if (isUnix()) {
         return getCommandOutput('docker ps -q --filter=ancestor=adisakshya/express-test:' + VERSION + ' -a')
@@ -297,6 +306,9 @@ def getTestContainerID(String VERSION) {
     }
 }
 
+/*
+ * Deploy to development
+ */
 def deployToDevelopment(String PRODUCTION_REGISTRY) {
     withCredentials([usernamePassword(credentialsId: 'dockerhub', passwordVariable: 'p', usernameVariable: 'u')]) {
         if(isUnix()) {
@@ -311,6 +323,9 @@ def deployToDevelopment(String PRODUCTION_REGISTRY) {
     }
 }
 
+/*
+ * Deploy to production
+ */
 def deployToProduction(String PRODUCTION_REGISTRY) {
     withCredentials([usernamePassword(credentialsId: 'dockerhub', passwordVariable: 'p', usernameVariable: 'u')]) {
         if(isUnix()) {
@@ -323,11 +338,14 @@ def deployToProduction(String PRODUCTION_REGISTRY) {
     }
 }
 
-def getCommandOutput(cmd) {
+/*
+ * Get a command output
+ */
+def getCommandOutput(COMMAND) {
     if (isUnix()){
-         return sh(returnStdout:true , script: '#!/bin/sh -e\n' + cmd).trim()
+         return sh(returnStdout:true , script: '#!/bin/sh -e\n' + COMMAND).trim()
      } else{
-       stdout = bat(returnStdout:true , script: cmd).trim()
+       stdout = bat(returnStdout:true , script: COMMAND).trim()
        result = stdout.readLines().drop(1).join(" ")       
        return result
     } 
