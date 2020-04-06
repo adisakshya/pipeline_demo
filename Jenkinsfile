@@ -154,13 +154,12 @@ pipeline {
                     echo 'Running test docker image'
                     TEST_IMAGE.run('-d=false')
                     echo 'Successfully ran test docker image'
+                    getTestReports(VERSION)
                 }
             }
             post { 
                 always { 
                     script {
-                        getTestReports(VERSION)
-
                         echo 'Removing test image'
                         if (isUnix()) {
                             sh 'docker container prune -f && docker rmi ' + TEST_REGISTRY
