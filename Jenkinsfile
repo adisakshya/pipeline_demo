@@ -190,11 +190,13 @@ pipeline {
             post { 
                 always { 
                     script {
-                        echo 'Removing production image'
+                        echo 'Removing production and development docker image'
                         if (isUnix()) {
                             sh 'docker container prune -f && docker rmi ' + PRODUCTION_REGISTRY + ' -f'
+                            sh 'docker container prune -f && docker rmi ' + PRODUCTION_REGISTRY + '-dev -f'
                         } else {
                             bat 'docker container prune -f && docker rmi ' + PRODUCTION_REGISTRY + ' -f'
+                            bat 'docker container prune -f && docker rmi ' + PRODUCTION_REGISTRY + '-dev -f'
                         }
                         PRODUCTION_IMAGE = null
                     }
@@ -314,11 +316,9 @@ def deployToProduction(String PRODUCTION_REGISTRY) {
     withCredentials([usernamePassword(credentialsId: 'dockerhub', passwordVariable: 'p', usernameVariable: 'u')]) {
         if(isUnix()) {
             sh 'docker login -u %u% -p %p% https://index.docker.io/v1/'
-            sh 'docker tag ' + PRODUCTION_REGISTRY + ' ' + PRODUCTION_REGISTRY
             sh 'docker push ' + PRODUCTION_REGISTRY
         } else {
             bat 'docker login -u %u% -p %p% https://index.docker.io/v1/'
-            bat 'docker tag ' + PRODUCTION_REGISTRY + ' ' + PRODUCTION_REGISTRY
             bat 'docker push ' + PRODUCTION_REGISTRY
         }
     }
