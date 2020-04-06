@@ -10,7 +10,7 @@ router.route('/')
    */
   .get((req, res) => {
     return res
-        .status(400)
+        .status(200)
         .json({
             "success": true,
             "error": false,
