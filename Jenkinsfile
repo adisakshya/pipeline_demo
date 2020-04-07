@@ -220,10 +220,27 @@ pipeline {
     
     post {
         always {
-            echo 'Removing all dangling images'
             script {
+                echo 'Removing all dangling images'
                 executeCommand('docker image prune -f')
+                echo 'Removing all created/tagged images'
+                def DEVELOPMENT_IMAGE_ID = getCommandOutput('docker images -q ' + PRODUCTION_REGISTRY + '-dev')
+                if(DEVELOPMENT_IMAGE_ID && (DEVELOPMENT_IMAGE_ID instanceof String)) {
+                    executeCommand('docker container prune -f && docker rmi ' + PRODUCTION_REGISTRY + '-dev -f')
+                }
+                if (PRODUCTION_IMAGE) {
+                    executeCommand('docker container prune -f && docker rmi ' + PRODUCTION_REGISTRY + ' -f')
+                    PRODUCTION_IMAGE = null
+                }
+                if (TEST_IMAGE) {
+                    executeCommand('docker container prune -f && docker rmi ' + TEST_REGISTRY + ' -f')
+                    TEST_IMAGE = null
+                }
+                cleanWs()
             }
+        }
+        aborted {
+            echo 'Aborted'
         }
         success {
             echo 'Success'
