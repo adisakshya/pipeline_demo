@@ -81,7 +81,7 @@ pipeline {
             post { 
                 always { 
                     script {
-                        if (!VERSION) {
+                        if (VERSION == 'undefined' || !VERSION || !(VERSION instanceof String)) {
                             currentBuild.result = 'FAILED'
                             error('Failed to identify version information')
                         } else {
