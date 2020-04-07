@@ -10,11 +10,11 @@ router.route('/')
    */
   .get((req, res) => {
     return res
-        .status(400)
+        .status(200)
         .json({
             "success": true,
             "error": false,
-            "message": "pong",
+            "message": "pong from v1.0.2",
             "data": null
         });
   });

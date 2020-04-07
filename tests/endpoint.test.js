@@ -8,7 +8,7 @@ describe('Ping', () => {
       expect(res.statusCode).toEqual(200);
       expect(res.body.success).toEqual(true);
       expect(res.body.error).toEqual(false);
-      expect(res.body.message).toEqual('pong');
+      expect(res.body.message).toEqual('pong from v1.0.2');
       expect(res.body.data).toEqual(null);
     });
 });
