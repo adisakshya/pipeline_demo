@@ -1,4 +1,4 @@
-# Production Production
+# Production Dockerfile
 
 # Base Image
 FROM node:latest as BASE
