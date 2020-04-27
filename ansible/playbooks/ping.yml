@@ -1,6 +1,16 @@
 ---
 - hosts: all
-  remote_user: root
   tasks:
-    - name: Echo
+    # Echo
+    - name: echo my name
       command: echo adisakshya
+    
+    # View current distro
+    - name: view current distro
+      shell: cat /etc/*-release
+      register: distro
+    - debug: var=distro
+
+    # Perform an action that requires root access
+    - name: create user adisakshya
+      user: name=adisakshya
