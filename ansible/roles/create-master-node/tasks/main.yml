@@ -1,41 +1,9 @@
 ---
-# Echo
 - name: echo
-  command: echo performing common roles
+  command: echo configuring master node
 ...
 
-
-# # Source : https://kubernetes.io/blog/2019/03/15/kubernetes-setup-using-ansible-and-vagrant/
-
-# ---
-# - name: create .exrc idempotent
-#   copy: content="set nocompatible\nset backspace=2\n" dest=.exrc
-
-# - name: turn swap off
-#   command: swapoff -a
-
-# - name: comment out swap line in /etc/fstab idempotent
-#   lineinfile:
-#     path: /etc/fstab 
-#     backup: yes
-#     backrefs: yes
-#     regexp: '(^(?!#).*swap *sw.*$)'
-#     line: '# \1'
-
-# - name: reboot server
-#   shell: 'sleep 1 && shutdown -r now "Rebooting to ensure swap is off" && sleep 1'
-#   async: 1
-#   poll: 0
-#   become: true
-
-# - name: Wait for server to restart
-#   wait_for_connection:
-
-# - name: Pause a little more
-#   pause:
-#     minutes: 1
-
-# - name: Install packages that allow apt to be used over HTTPS
+# - name: Echo Message
 #   apt:
 #     name: "{{ packages }}"
 #     state: present
@@ -46,7 +14,7 @@
 #     - ca-certificates
 #     - curl
 #     - gnupg-agent
-#     # - software-properties-common
+#     - software-properties-common
 
 # - name: Add an apt signing key for Docker
 #   apt_key:
@@ -68,21 +36,8 @@
 #     - docker-ce 
 #     - docker-ce-cli 
 #     - containerd.io
-
-# # - name: create docker group
-# #   shell: groupadd docker
-# #   args:
-# #     executable: /bin/bash
-
-# - name: add the user to the docker group
-#   shell: usermod -aG docker $(whoami)
-#   args:
-#     executable: /bin/bash
-    
-# - name: start docker
-#   shell: service docker start
-#   args:
-#     executable: /bin/bash
+#   notify:
+#     - docker status
 
 # - name: Add an apt signing key for Kubernetes
 #   apt_key:
@@ -106,13 +61,10 @@
 #       - kubeadm 
 #       - kubectl
 
-# - name: create kubelet dir
-#   command: mkdir /etc/default
-
 # - name: Configure node ip
 #   lineinfile:
 #     path: /etc/default/kubelet
-#     line: KUBELET_EXTRA_ARGS=--node-ip=192.168.99.101
+#     line: KUBELET_EXTRA_ARGS=--node-ip={{ node_ip }}
 
 # - name: Restart kubelet
 #   service:
@@ -120,12 +72,12 @@
 #     daemon_reload: yes
 #     state: restarted
 
-# - name: Setup kubeconfig for ubuntu user
+# - name: Setup kubeconfig for vagrant user
 #   command: "{{ item }}"
 #   with_items:
-#     - mkdir -p /home/ubuntu/.kube
-#     - cp -i /etc/kubernetes/admin.conf /home/ubuntu/.kube/config
-#     - chown ubuntu:ubuntu /home/ubuntu/.kube/config
+#     - mkdir -p /home/vagrant/.kube
+#     - cp -i /etc/kubernetes/admin.conf /home/vagrant/.kube/config
+#     - chown vagrant:vagrant /home/vagrant/.kube/config
 
 # - name: Install calico pod network
 #   become: false
@@ -137,4 +89,7 @@
 
 # - name: Copy join command to local file
 #   local_action: copy content="{{ join_command.stdout_lines[0] }}" dest="./join-command"
-# ...
+
+# handlers:
+#   - name: docker status
+#     service: name=docker state=started
