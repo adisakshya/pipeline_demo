@@ -9,7 +9,8 @@ echo '> Setting up Kubernets Master node'
 docker run -d --privileged -p 2223:22 \
     --name K8Master \
     -v "/$(pwd)/keys/ansible.pub:/home/ubuntu/.ssh/authorized_keys" \
-    --memory="1024m" --memory-swap="1024m" \
+    --memory="2048m" --memory-swap="2048m" \
+    --cpus=0.5 \
     adisakshya/ssh-service:latest \
     && ssh-copy-id -f  -i keys/ansible root@192.168.99.101 -p 2223
 
@@ -18,6 +19,7 @@ echo '> Setting up Kubernets Worker node 1'
 docker run -d --privileged -p 2224:22 \
     --name k8Worker1 \
     -v "/$(pwd)/keys/ansible.pub:/home/ubuntu/.ssh/authorized_keys" \
-    --memory="1024m" --memory-swap="1024m" \
+    --memory="2048m" --memory-swap="2048m" \
+    --cpus=0.5 \
     adisakshya/ssh-service:latest \
     && ssh-copy-id -f  -i keys/ansible root@192.168.99.101 -p 2224
