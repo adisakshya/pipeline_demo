@@ -1,0 +1,5 @@
+---
+- hosts: development
+  roles:
+  - development_deployment
+...

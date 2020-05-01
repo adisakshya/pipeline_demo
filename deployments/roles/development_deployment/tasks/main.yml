@@ -1,0 +1,6 @@
+---
+# Deploy to development host
+- name: Print debug message
+  debug:
+    msg: Deploying to development host...
+...
