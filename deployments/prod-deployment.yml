@@ -1,5 +1,6 @@
 ---
 - hosts: production
   roles:
-  - production_deployment
+  - role: production_deployment
+    when: "env == 'production'"
 ...

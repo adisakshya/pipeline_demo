@@ -1,5 +1,6 @@
 ---
 - hosts: development
   roles:
-  - development_deployment
+  - role: development_deployment
+    when: "env == 'development'"
 ...

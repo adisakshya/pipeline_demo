@@ -8,6 +8,9 @@ docker run --rm -it \
     adisakshya/ansible:latest \
     ansible all -m ping -i //etc/ansible/hosts.yml
 
+
+ENV='production'
+
 # Run master playbook
 echo '> Runing master playbook'
 docker run --rm -it \
@@ -15,4 +18,4 @@ docker run --rm -it \
     -v "/$(pwd)/hosts:/etc/ansible" \
     -v "/$(pwd):/ansible" \
     adisakshya/ansible:latest \
-    ansible-playbook site.yml -i //etc/ansible/hosts.yml 
+    ansible-playbook site.yml --extra-vars "env=$ENV" -i //etc/ansible/hosts.yml 
