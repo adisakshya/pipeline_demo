@@ -1,0 +1,5 @@
+---
+- hosts: K8Master
+  roles:
+  - common
+...
