@@ -1,4 +1,9 @@
 ---
+# Print vars
+- name: Print vars
+  debug:
+    msg: '{{ image_name }} {{ tag }}'
+
 # Deploy to development host
 - name: Print debug message
   debug:
