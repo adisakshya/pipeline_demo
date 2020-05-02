@@ -1,4 +1,0 @@
----
-- import_playbook: setup-nodes.yml
-- import_playbook: configure-master-node.yml
-- import_playbook: configure-worker-nodes.yml

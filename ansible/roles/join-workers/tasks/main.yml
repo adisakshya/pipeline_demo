@@ -1,4 +1,0 @@
----
-- name: echo
-  command: echo configuring worker nodes
-...
