@@ -4,7 +4,7 @@
 kind delete cluster
 
 # Create new kind cluster from config file
-kind create cluster --config=kubernetes/cluster/cluster-config.yml
+kind create cluster --config=config/cluster-config.yml
 
 # Run master playbook
 echo '> Runing master playbook'
