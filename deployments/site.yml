@@ -1,4 +1,4 @@
 ---
-- import_playbook: prerequisites.yml
-- import_playbook: dev-deployment.yml
-- import_playbook: prod-deployment.yml
+  - import_playbook: ping.yml
+  - import_playbook: dev-deployment.yml
+  - import_playbook: prod-deployment.yml
