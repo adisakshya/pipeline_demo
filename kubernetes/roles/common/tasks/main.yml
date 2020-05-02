@@ -18,24 +18,6 @@
   args:
     executable: /bin/bash
 
-# Create development namespace
-- name: Create a k8s namespace
-  k8s:
-    kubeconfig: cluster/config
-    name: development
-    api_version: v1
-    kind: Namespace
-    state: present
-
-# Create production namespace
-- name: Create a k8s namespace
-  k8s:
-    kubeconfig: cluster/config
-    name: production
-    api_version: v1
-    kind: Namespace
-    state: present
-
 # Fetch list of kubernetes namespace
 - name: Fetch a list of namespaces
   set_fact:
