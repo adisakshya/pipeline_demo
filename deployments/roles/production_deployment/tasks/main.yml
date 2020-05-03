@@ -4,8 +4,9 @@
   debug:
     msg: '{{ image_name }} {{ tag }}'
 
-# Deploy to production host
-- name: Print debug message
-  debug:
-    msg: Deploying to production host...
+- name: Create a Busybox deployment
+  k8s:
+    kubeconfig: /cluster/config
+    state: present
+    src: /kubernetes/deployments/busybox.yml
 ...
