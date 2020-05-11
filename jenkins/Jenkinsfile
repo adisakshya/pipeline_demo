@@ -19,6 +19,8 @@ pipeline {
      * Environment Variables
      */
     environment {
+        SOURCE_PATH = './src/'             // Source directory relative path
+
         VERSION = null                      // Version of service
 
         PRODUCTION_DOCKERFILE = null        // Production dockerfile name
@@ -75,7 +77,7 @@ pipeline {
             steps {
                 echo 'Getting version information'
                 script {
-                    VERSION = getCommandOutput('node -p -e "require(\'./package.json\').version"')
+                    VERSION = getCommandOutput('node -p -e "require(\'./src/package.json\').version')
                 }
             }
             post { 
@@ -132,11 +134,11 @@ pipeline {
             steps {
                 script {
                     echo 'Building production docker image'
-                    PRODUCTION_IMAGE = docker.build(PRODUCTION_REGISTRY,  '-f ' + PRODUCTION_DOCKERFILE + ' .')
+                    PRODUCTION_IMAGE = docker.build(PRODUCTION_REGISTRY,  '-f ' + SOURCE_PATH + PRODUCTION_DOCKERFILE + ' .')
                     echo 'Successfully built production docker image'
                     
                     echo 'Building test docker image'
-                    TEST_IMAGE = docker.build(TEST_REGISTRY,  '-f ' + TEST_DOCKERFILE + ' --build-arg PRODUCTION_IMAGE_TAG=' + VERSION + ' .')
+                    TEST_IMAGE = docker.build(TEST_REGISTRY,  '-f ' + SOURCE_PATH + TEST_DOCKERFILE + ' --build-arg PRODUCTION_IMAGE_TAG=' + VERSION + ' .')
                     echo 'Successfully built test docker image'
                 }
             }
@@ -296,7 +298,7 @@ def getTestRegistry(String VERSION) {
 def getTestReports(String VERSION) {
     def testContainerID = getTestContainerID(VERSION)
     executeCommand('docker cp ' + testContainerID + ':/usr/src/app/build .')
-    junit 'build/reports/*.xml'
+    junit './src/build/reports/*.xml'
 }
 
 /*

@@ -5,7 +5,7 @@ ARG PRODUCTION_IMAGE_TAG=0
 FROM adisakshya/express:$PRODUCTION_IMAGE_TAG as BASE
 
 # Copy test files
-COPY tests tests
+COPY ./src/tests tests
 
 # Set environment variable
 ENV NODE_ENV dev

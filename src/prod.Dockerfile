@@ -13,12 +13,12 @@ WORKDIR /usr/src/app
 ENV NODE_ENV production
 
 # Install app dependencies
-COPY ./package*.json ./
+COPY ./src/package*.json ./
 
 RUN npm update
 
 # Bundle app source
-COPY . .
+COPY ./src ./
 
 # Start the application
 # when running the container
