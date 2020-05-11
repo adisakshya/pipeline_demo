@@ -298,7 +298,7 @@ def getTestRegistry(String VERSION) {
 def getTestReports(String VERSION) {
     def testContainerID = getTestContainerID(VERSION)
     executeCommand('docker cp ' + testContainerID + ':/usr/src/app/build .')
-    junit './src/build/reports/*.xml'
+    junit './build/reports/*.xml'
 }
 
 /*
