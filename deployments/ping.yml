@@ -1,3 +1,4 @@
+# Ping all hosts
 ---
 - hosts: all
   gather_facts: false
