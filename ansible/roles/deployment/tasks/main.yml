@@ -1,0 +1,31 @@
+# Deploy API docker image in desired environment
+---
+- name: Print vars
+  debug:
+    msg: '{{ api_image_name }}:{{ tag }}'
+
+- name: Verify k8s namespace
+  k8s:
+    kubeconfig: '{{ k8s_kubeconfig }}'
+    name: '{{ env }}'
+    api_version: v1
+    kind: Namespace
+    state: present
+
+- name: Create deployment
+  k8s:
+    definition: "{{ lookup('template', '../ansible/kubernetes/api/deployment/deployment.yml') }}"
+    kubeconfig: '{{ k8s_kubeconfig }}'
+    state: present
+
+- name: Create service
+  k8s:
+    definition: "{{ lookup('template', '../ansible/kubernetes/api/services/loadbalancer.yml') }}"
+    kubeconfig: '{{ k8s_kubeconfig }}'
+    state: present
+  register: nginx_svc
+
+- name: Wait for 4 minutes to allow the loadbalancer service to start and then continue with play
+  wait_for:
+    timeout: 240
+...

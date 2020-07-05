@@ -1,3 +1,2 @@
 ---
-image_name: 'adisakshya/express'
 tag: '{{ version }}'

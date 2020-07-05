@@ -1,9 +1,0 @@
-# Deploy to production
----
-- hosts: localhost
-  vars_files:
-    - "environments/{{ env }}/group_vars/image.yml"
-  roles:
-  - role: production_deployment
-    when: "env == 'production'"
-...

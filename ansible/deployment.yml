@@ -2,8 +2,8 @@
 ---  
 - hosts: localhost
   vars_files:
+    - "environments/common/group_vars/main.yml"
     - "environments/{{ env }}/group_vars/image.yml"
   roles:
-  - role: development_deployment
-    when: "env == 'development'"
+  - role: deployment
 ...
