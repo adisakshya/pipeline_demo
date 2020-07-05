@@ -23,9 +23,34 @@
     definition: "{{ lookup('template', '../ansible/kubernetes/api/services/loadbalancer.yml') }}"
     kubeconfig: '{{ k8s_kubeconfig }}'
     state: present
-  register: nginx_svc
+  register: sample_api_svc
 
 - name: Wait for 4 minutes to allow the loadbalancer service to start and then continue with play
   wait_for:
     timeout: 240
+
+#####################################
+# TASKS THAT HAVN'T BEEN TESTED YET #
+#####################################
+# - name: Set the load balancer URL as a fact.
+#   set_fact:
+#     sample_api_lb_host: "{{ sample_api_svc['result']['status']['loadBalancer']['ingress'][0]['hostname'] }}"
+#   when: aws_environment | bool
+  
+# - name: Wait for load balancer to respond.
+#   uri:
+#     url: "http://{{ sample_api_lb_host }}"
+#   register: lb_result
+#   until: lb_result.status == 200
+#   retries: 60
+#   delay: 5
+#   when: aws_environment | bool
+
+# - name: Get ELB information
+#   ec2_elb_info:
+#     region: "{{ aws_region }}"
+#     profile: "{{ aws_profile }}"
+#     names: "{{ sample_api_lb_host.split('-')[0] }}"
+#   register: elb_info
+#   when: aws_environment | bool
 ...
