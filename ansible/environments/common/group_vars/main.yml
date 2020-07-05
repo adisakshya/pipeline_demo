@@ -1,3 +1,4 @@
+# Common environment variables
 ---
 # AWS Settings
 aws_environment: true

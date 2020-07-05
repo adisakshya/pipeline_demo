@@ -1,4 +1,7 @@
 # Master playbook
 ---
+  # Ping all hosts
   - import_playbook: ping.yml
+
+  # Initiate deployment
   - import_playbook: deployment.yml

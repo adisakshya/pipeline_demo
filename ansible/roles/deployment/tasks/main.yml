@@ -1,6 +1,6 @@
 # Deploy API docker image in desired environment
 ---
-- name: Print vars
+- name: Show docker image information
   debug:
     msg: '{{ api_image_name }}:{{ tag }}'
 
