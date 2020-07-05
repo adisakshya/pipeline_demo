@@ -1,6 +1,6 @@
 # Deploy to development
 ---  
-- hosts: development
+- hosts: localhost
   vars_files:
     - "environments/{{ env }}/group_vars/image.yml"
   roles:

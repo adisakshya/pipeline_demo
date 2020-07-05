@@ -1,6 +1,0 @@
-# Install prerequisites
----
-- hosts: production
-  roles:
-  - common
-...
