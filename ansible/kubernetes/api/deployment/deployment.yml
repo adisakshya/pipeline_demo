@@ -1,0 +1,21 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-deployment
+  namespace: "{{ env }}"
+spec:
+  selector:
+    matchLabels:
+      app: sample-api
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: sample-api
+    spec:
+      containers:
+      - name: sample-api
+        image: "{{ api_image_name }}:{{ tag }}"
+        ports:
+        - containerPort: 3000

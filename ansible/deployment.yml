@@ -1,0 +1,11 @@
+# Initiate deployment
+---  
+- hosts: localhost
+  vars_files:
+    # Use common variables
+    - "environments/common/group_vars/main.yml"
+    # Use environment specific variables
+    - "environments/{{ env }}/group_vars/image.yml"
+  roles:
+  - role: deployment
+...
