@@ -9,13 +9,6 @@ pipeline {
     agent any
     
     /*
-     * Use docker tool
-     */
-    tools {
-        'org.jenkinsci.plugins.docker.commons.tools.DockerTool' 'docker'
-    }
-    
-    /*
      * Environment Variables
      */
     environment {
@@ -77,7 +70,7 @@ pipeline {
             steps {
                 echo 'Getting version information'
                 script {
-                    VERSION = getCommandOutput('node -p -e "require(\'./src/package.json\').version')
+                    VERSION = getCommandOutput('node -p -e "require(\'./src/package.json\').version"')
                 }
             }
             post { 
