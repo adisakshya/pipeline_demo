@@ -148,7 +148,8 @@ pipeline {
             post { 
                 always { 
                     script {
-                        getTestReports(VERSION)
+                        // Isolated, untill fixed (ISSUE #5 - https://github.com/adisakshya/pipeline_demo/issues/5)
+                        // getTestReports(VERSION)
                         echo 'Removing test image'
                         executeCommand('docker container prune -f && docker rmi ' + TEST_REGISTRY)
                         TEST_IMAGE = null
@@ -288,7 +289,7 @@ def getTestRegistry(String VERSION) {
 def getTestReports(String VERSION) {
     def testContainerID = getTestContainerID(VERSION)
     executeCommand('docker cp ' + testContainerID + ':/usr/src/app/build .')
-    junit './build/reports/*.xml'
+    junit './src/build/reports/*.xml'
 }
 
 /*
